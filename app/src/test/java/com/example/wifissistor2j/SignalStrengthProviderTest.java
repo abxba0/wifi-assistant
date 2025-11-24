@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -92,11 +93,5 @@ public class SignalStrengthProviderTest {
         provider.start();
         provider.stop();
         // Should not crash
-    }
-
-    private void assertNotNull(Object obj) {
-        if (obj == null) {
-            throw new AssertionError("Object should not be null");
-        }
     }
 }

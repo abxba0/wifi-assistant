@@ -89,8 +89,9 @@ public class SpeedTestManagerTest {
         try {
             manager.startTest();
         } catch (Exception e) {
-            // Expected to fail due to missing resources in unit test, but shouldn't crash
-            assertTrue(e.getMessage() == null || !e.getMessage().contains("NullPointerException"));
+            // Expected to fail due to missing resources in unit test
+            // Verify it's not a NullPointerException
+            assertFalse("Should not throw NullPointerException", e instanceof NullPointerException);
         }
     }
 

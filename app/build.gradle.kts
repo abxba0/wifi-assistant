@@ -55,7 +55,7 @@ dependencies {
     // Unit Testing
     testImplementation(libs.junit)
     testImplementation("org.mockito:mockito-core:5.7.0")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("org.mockito:mockito-inline:5.7.0")
     testImplementation("org.robolectric:robolectric:4.11.1")
     testImplementation("androidx.test:core:1.5.0")
     testImplementation("androidx.test.ext:junit:1.1.5")
@@ -86,7 +86,8 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "android/**/*.*"
     )
     
-    val debugTree = fileTree("${project.buildDir}/intermediates/javac/debug") {
+    val buildDir = layout.buildDirectory.get().asFile
+    val debugTree = fileTree("${buildDir}/intermediates/javac/debug") {
         exclude(fileFilter)
     }
     
@@ -94,7 +95,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     
     sourceDirectories.setFrom(files(mainSrc))
     classDirectories.setFrom(files(debugTree))
-    executionData.setFrom(fileTree(project.buildDir) {
+    executionData.setFrom(fileTree(buildDir) {
         include("**/*.exec", "**/*.ec")
     })
 }
