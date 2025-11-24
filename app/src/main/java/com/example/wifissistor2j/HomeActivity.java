@@ -25,9 +25,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.splashscreen.SplashScreen;
+import androidx.core.text.HtmlCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
@@ -41,6 +43,8 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
 
     private static final String TAG = "HomeActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final String PREFS_NAME = "app_prefs";
+    private static final String KEY_FIRST_RUN = "first_run";
 
     private boolean isTestRunning = false;
 
@@ -107,6 +111,7 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
 
         setupNavigation();
         setupWifiScanReceiver();
+        checkAndShowFirstRunDialog();
     }
 
     @Override
@@ -385,5 +390,29 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
                 Toast.makeText(this, R.string.home_permission_required, Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    private void checkAndShowFirstRunDialog() {
+        SharedPreferences appPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean isFirstRun = appPrefs.getBoolean(KEY_FIRST_RUN, true);
+
+        if (isFirstRun) {
+            showFirstRunDialog();
+            // Mark that we've shown the dialog immediately to prevent showing it again
+            // even if the app is closed before the user clicks "Got it".
+            // This is intentional - we don't want to spam users with the dialog.
+            appPrefs.edit().putBoolean(KEY_FIRST_RUN, false).apply();
+        }
+    }
+
+    private void showFirstRunDialog() {
+        String message = getString(R.string.first_run_dialog_message);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.first_run_dialog_title)
+                .setMessage(HtmlCompat.fromHtml(message, HtmlCompat.FROM_HTML_MODE_LEGACY))
+                .setPositiveButton(R.string.first_run_dialog_button, (dialogInterface, i) -> dialogInterface.dismiss())
+                .setCancelable(false)
+                .create();
+        dialog.show();
     }
 }

@@ -2,6 +2,7 @@ package com.example.wifissistor2j;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -19,6 +20,9 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class HomeActivityTest {
+
+    private static final String PREFS_NAME = "app_prefs";
+    private static final String KEY_FIRST_RUN = "first_run";
 
     private ActivityScenario<HomeActivity> scenario;
     private Context context;
@@ -72,5 +76,36 @@ public class HomeActivityTest {
             // Verify intent doesn't crash
             assertNotNull(intent);
         });
+    }
+
+    @Test
+    public void firstRunFlagIsSetAfterActivityLaunch() {
+        // Clear the first run flag to simulate first run
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(KEY_FIRST_RUN, true).apply();
+
+        // Launch activity
+        scenario = ActivityScenario.launch(HomeActivity.class);
+
+        // Use onActivity callback to ensure activity is ready before checking
+        scenario.onActivity(activity -> {
+            // Verify the first run flag is now false after activity onCreate completes
+            boolean isFirstRun = prefs.getBoolean(KEY_FIRST_RUN, true);
+            assertFalse("First run flag should be false after activity launches", isFirstRun);
+        });
+    }
+
+    @Test
+    public void firstRunFlagRemainsUnchangedOnSubsequentLaunches() {
+        // Set the first run flag to false (simulating not first run)
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(KEY_FIRST_RUN, false).apply();
+
+        // Launch activity
+        scenario = ActivityScenario.launch(HomeActivity.class);
+
+        // Verify the first run flag remains false
+        boolean isFirstRun = prefs.getBoolean(KEY_FIRST_RUN, true);
+        assertFalse("First run flag should remain false", isFirstRun);
     }
 }
