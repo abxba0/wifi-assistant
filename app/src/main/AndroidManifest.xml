@@ -45,6 +45,18 @@
             android:exported="false"
             android:theme="@style/Theme.Wifissistor2j"
             android:launchMode="singleTop" />
+        <activity
+            android:name=".GlossaryActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Wifissistor2j"
+            android:launchMode="singleTop"
+            android:label="@string/glossary_title" />
+        <activity
+            android:name=".ImprovementChecklistActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Wifissistor2j"
+            android:launchMode="singleTop"
+            android:label="@string/improve_wifi" />
     </application>
 
 </manifest>

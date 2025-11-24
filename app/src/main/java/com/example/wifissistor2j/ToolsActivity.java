@@ -40,6 +40,10 @@ public class ToolsActivity extends AppCompatActivity implements SignalStrengthLi
     private TextView signalStrengthText;
     private TextView signalStrengthDescriptionText;
 
+    // Quick Help Buttons
+    private Button glossaryButton;
+    private Button improvementChecklistButton;
+
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
     private WifiManager wifiManager;
@@ -65,10 +69,13 @@ public class ToolsActivity extends AppCompatActivity implements SignalStrengthLi
         pingResultText = findViewById(R.id.ping_result_text);
         signalStrengthText = findViewById(R.id.signal_strength_text);
         signalStrengthDescriptionText = findViewById(R.id.signal_strength_description_text);
+        glossaryButton = findViewById(R.id.btn_glossary);
+        improvementChecklistButton = findViewById(R.id.btn_improvement_checklist);
 
         setupNavigation();
         displayWifiInfo();
         setupPingTool();
+        setupQuickHelpButtons();
     }
 
     @Override
@@ -88,6 +95,18 @@ public class ToolsActivity extends AppCompatActivity implements SignalStrengthLi
     protected void onDestroy() {
         super.onDestroy();
         executorService.shutdown();
+    }
+
+    private void setupQuickHelpButtons() {
+        glossaryButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, GlossaryActivity.class);
+            startActivity(intent);
+        });
+
+        improvementChecklistButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ImprovementChecklistActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void displayWifiInfo() {

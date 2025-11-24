@@ -86,4 +86,68 @@
     <string name="first_run_dialog_message">This app helps you analyze and optimize your Wi-Fi network performance.\n\n<b>Permissions Explained:</b>\n\n<b>Location Permission:</b>\nGoogle Play policies require location permission for Wi-Fi scanning features. This app <b>does not use, collect, store, or share your physical location</b>. We only need this permission to scan for Wi-Fi networks.\n\n<b>What the app accesses:</b>\n• Wi-Fi network information (signal strength, network names)\n• Internet connection for speed testing\n• Network status\n\n<b>Your Privacy:</b>\nNo personal data or location information is collected, stored, or shared.</string>
     <string name="first_run_dialog_button">Got it</string>
 
+    <!-- Friendly UI strings for non-technical users -->
+    <string name="check_my_wifi">CHECK MY WI-FI</string>
+    <string name="checking_wifi">Checking…</string>
+    <string name="stop_check">STOP</string>
+    <string name="check_again">CHECK AGAIN</string>
+
+    <!-- Health Score labels -->
+    <string name="health_score">Wi-Fi Health</string>
+    <string name="health_score_value">%1$d/100</string>
+    <string name="health_excellent">Excellent</string>
+    <string name="health_good">Good</string>
+    <string name="health_fair">Fair</string>
+    <string name="health_poor">Poor</string>
+
+    <!-- Security Badge strings -->
+    <string name="security_status">Network Security</string>
+    <string name="security_secure">🔒 Secure</string>
+    <string name="security_unsecured">⚠️ Open Network</string>
+    <string name="security_advice_secure">This network is protected with a password.</string>
+    <string name="security_advice_unsecured">Anyone nearby can join this network. Be careful with personal info.</string>
+    <string name="security_unknown">Security Unknown</string>
+
+    <!-- Signal quality labels (user-friendly) -->
+    <string name="signal_excellent">Excellent Signal</string>
+    <string name="signal_good">Good Signal</string>
+    <string name="signal_fair">Fair Signal</string>
+    <string name="signal_weak">Weak Signal</string>
+
+    <!-- Speed explanations (plain language) -->
+    <string name="speed_fast">Fast – Great for streaming and video calls</string>
+    <string name="speed_moderate">Moderate – Good for browsing and social media</string>
+    <string name="speed_slow">Slow – May struggle with video streaming</string>
+
+    <!-- Improvement tips -->
+    <string name="improve_wifi">How to Improve</string>
+    <string name="tip_move_closer">Move closer to your Wi-Fi router</string>
+    <string name="tip_restart_router">Restart your router (unplug for 30 seconds)</string>
+    <string name="tip_reduce_devices">Disconnect unused devices from Wi-Fi</string>
+    <string name="tip_reduce_walls">Reduce walls between you and the router</string>
+    <string name="tip_close_apps">Close apps using internet in the background</string>
+
+    <!-- Share button -->
+    <string name="share_results">Share Results</string>
+    <string name="share_chooser_title">Share your Wi-Fi results</string>
+
+    <!-- Daily tip -->
+    <string name="daily_tip_title">💡 Tip of the Day</string>
+
+    <!-- Glossary -->
+    <string name="glossary_title">Wi-Fi Terms Explained</string>
+    <string name="learn_more">Learn More</string>
+
+    <!-- Plain language explanations -->
+    <string name="explain_download_speed">How fast you can download or stream.</string>
+    <string name="explain_upload_speed">How fast you can share photos or make video calls.</string>
+    <string name="explain_stability">Whether your video calls would freeze.</string>
+    <string name="explain_signal">How strong the Wi-Fi reaches you.</string>
+    <string name="explain_secure">Protected with a password.</string>
+    <string name="explain_unsecure">Anyone nearby can join.</string>
+
+    <!-- Network health card -->
+    <string name="network_health_title">Your Wi-Fi Health</string>
+    <string name="network_health_tip">%1$s</string>
+
 </resources>
