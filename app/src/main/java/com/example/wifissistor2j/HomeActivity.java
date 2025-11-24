@@ -65,9 +65,23 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
     private BottomNavigationView bottomNavigationView;
     private MaterialCardView suggestionCard;
 
+    // New UI elements for friendly design
+    private TextView healthScoreValueTextView;
+    private TextView healthScoreLabelTextView;
+    private TextView healthScoreTipTextView;
+    private TextView securityBadgeTextView;
+    private TextView securityAdviceTextView;
+    private Button shareButton;
+    private TextView dailyTipTextView;
+    private TextView networksHeaderTextView;
+    private MaterialCardView securityCard;
+
     private SpeedTestManager speedTestManager;
     private SharedPreferences sharedPreferences;
     private double lastDownloadSpeedMbps = 0;
+    private double lastUploadSpeedMbps = 0;
+    private int lastRssi = -100;
+    private String lastCapabilities = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +105,17 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
         TextView suggestionTextView = findViewById(R.id.suggestion_text);
         ImageButton suggestionCloseButton = findViewById(R.id.suggestion_close_button);
 
+        // New views for friendly design
+        healthScoreValueTextView = findViewById(R.id.health_score_value);
+        healthScoreLabelTextView = findViewById(R.id.health_score_label);
+        healthScoreTipTextView = findViewById(R.id.health_score_tip);
+        securityBadgeTextView = findViewById(R.id.security_badge);
+        securityAdviceTextView = findViewById(R.id.security_advice);
+        shareButton = findViewById(R.id.btn_share);
+        dailyTipTextView = findViewById(R.id.daily_tip_text);
+        networksHeaderTextView = findViewById(R.id.networks_header);
+        securityCard = findViewById(R.id.security_card);
+
         // --- Initialize Managers ---
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -109,9 +134,18 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
         suggestionTextView.setText(R.string.suggestion_weak_signal);
         suggestionCloseButton.setOnClickListener(v -> suggestionCard.setVisibility(View.GONE));
 
+        // Setup share button
+        shareButton.setOnClickListener(v -> shareResults());
+
         setupNavigation();
         setupWifiScanReceiver();
         checkAndShowFirstRunDialog();
+
+        // Show daily tip
+        showDailyTip();
+
+        // Initialize health score display
+        initializeHealthScoreDisplay();
     }
 
     @Override
@@ -119,6 +153,7 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
         super.onResume();
         speedTestManager.setListener(this);
         updateNetworkStatusUI();
+        updateSecurityBadge();
         registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         bottomNavigationView.setSelectedItemId(R.id.nav_home);
     }
@@ -136,16 +171,28 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
         // No need to call shutdown on a singleton manager from an activity's onDestroy
     }
 
+    private void initializeHealthScoreDisplay() {
+        healthScoreValueTextView.setText("--");
+        healthScoreLabelTextView.setText("");
+        healthScoreTipTextView.setVisibility(View.GONE);
+    }
+
+    private void showDailyTip() {
+        WifiTips.Tip tip = WifiTips.getDailyTip();
+        dailyTipTextView.setText(tip.getTitle() + ": " + tip.getDescription());
+    }
+
     private void startSpeedTest() {
         if (!analyzeButton.isEnabled()) {
             Toast.makeText(this, R.string.home_no_internet, Toast.LENGTH_SHORT).show();
             return;
         }
         isTestRunning = true;
-        analyzeButton.setText(R.string.home_stop_analysis);
+        analyzeButton.setText(R.string.stop_check);
 
         // Reset UI
         suggestionCard.setVisibility(View.GONE);
+        shareButton.setVisibility(View.GONE);
         downloadSpeedValueMbpsTextView.setText(R.string.speed_value_placeholder);
         downloadSpeedValueMbsTextView.setText(R.string.speed_value_placeholder);
         downloadSpeedQualityTextView.setText("");
@@ -154,6 +201,11 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
         uploadSpeedQualityTextView.setText("");
         speedTestProgressBar.setIndeterminate(true);
         speedTestProgressBar.setVisibility(View.VISIBLE);
+
+        // Reset health score display
+        healthScoreValueTextView.setText("...");
+        healthScoreLabelTextView.setText(R.string.checking_wifi);
+        healthScoreTipTextView.setVisibility(View.GONE);
 
         speedTestManager.startTest();
     }
@@ -177,7 +229,8 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
         String formattedMbps = getString(R.string.speed_format_mbps, speedMbps);
         String formattedMbs = getString(R.string.speed_format_mbs, speedMbs);
 
-        String quality = SpeedResultInterpreter.interpret(speedMbps.doubleValue());
+        // Use friendly speed quality labels
+        String quality = getFriendlySpeedQuality(speedMbps.doubleValue());
 
         TextView mbpsView, mbsView, qualityView;
 
@@ -185,11 +238,12 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
             mbpsView = downloadSpeedValueMbpsTextView;
             mbsView = downloadSpeedValueMbsTextView;
             qualityView = downloadSpeedQualityTextView;
-            lastDownloadSpeedMbps = speedMbps.doubleValue(); // Store for suggestion logic
+            lastDownloadSpeedMbps = speedMbps.doubleValue();
         } else {
             mbpsView = uploadSpeedValueMbpsTextView;
             mbsView = uploadSpeedValueMbsTextView;
             qualityView = uploadSpeedQualityTextView;
+            lastUploadSpeedMbps = speedMbps.doubleValue();
         }
 
         qualityView.setText(quality);
@@ -212,6 +266,116 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
                 mbpsView.setVisibility(View.GONE);
                 break;
         }
+    }
+
+    /**
+     * Returns a friendly speed quality description instead of technical terms.
+     */
+    private String getFriendlySpeedQuality(double speedMbps) {
+        if (speedMbps >= 50) {
+            return getString(R.string.speed_fast);
+        } else if (speedMbps >= 10) {
+            return getString(R.string.speed_moderate);
+        } else {
+            return getString(R.string.speed_slow);
+        }
+    }
+
+    private void updateHealthScore() {
+        // Get current signal strength
+        if (wifiManager != null && wifiManager.isWifiEnabled()) {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            if (wifiInfo != null) {
+                lastRssi = wifiInfo.getRssi();
+            }
+        }
+
+        // Calculate health score using the new calculator
+        NetworkHealthCalculator.HealthScore healthScore = 
+                NetworkHealthCalculator.calculate(lastRssi, lastDownloadSpeedMbps);
+
+        // Update UI
+        healthScoreValueTextView.setText(String.valueOf(healthScore.getScore()));
+        healthScoreLabelTextView.setText(healthScore.getLabel());
+
+        String tip = healthScore.getTip();
+        if (tip != null && !tip.isEmpty()) {
+            healthScoreTipTextView.setText(tip);
+            healthScoreTipTextView.setVisibility(View.VISIBLE);
+        } else {
+            healthScoreTipTextView.setVisibility(View.GONE);
+        }
+
+        // Show share button after test completes
+        shareButton.setVisibility(View.VISIBLE);
+    }
+
+    private void updateSecurityBadge() {
+        if (wifiManager == null || !wifiManager.isWifiEnabled()) {
+            securityCard.setVisibility(View.GONE);
+            return;
+        }
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            securityCard.setVisibility(View.GONE);
+            return;
+        }
+
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        if (wifiInfo == null) {
+            securityCard.setVisibility(View.GONE);
+            return;
+        }
+
+        String ssid = wifiInfo.getSSID();
+        if (ssid == null || ssid.equals("<unknown ssid>")) {
+            securityCard.setVisibility(View.GONE);
+            return;
+        }
+
+        // Find the current network in scan results to get security info
+        List<ScanResult> scanResults = wifiManager.getScanResults();
+        String cleanSsid = ssid.replace("\"", "");
+
+        for (ScanResult result : scanResults) {
+            if (result.SSID != null && result.SSID.equals(cleanSsid)) {
+                lastCapabilities = result.capabilities;
+                NetworkSecurityChecker.SecurityResult securityResult = 
+                        NetworkSecurityChecker.checkSecurity(result.capabilities);
+
+                if (securityResult.isSecure()) {
+                    securityBadgeTextView.setText(R.string.security_secure);
+                    securityAdviceTextView.setText(R.string.security_advice_secure);
+                } else {
+                    securityBadgeTextView.setText(R.string.security_unsecured);
+                    securityAdviceTextView.setText(R.string.security_advice_unsecured);
+                }
+                securityCard.setVisibility(View.VISIBLE);
+                return;
+            }
+        }
+
+        // If we couldn't find the network, hide the card
+        securityCard.setVisibility(View.GONE);
+    }
+
+    private void shareResults() {
+        String signalQuality = SignalStrengthMapper.getSignalStrength(lastRssi);
+        boolean isSecure = NetworkSecurityChecker.isNetworkSecure(lastCapabilities);
+
+        NetworkHealthCalculator.HealthScore healthScore = 
+                NetworkHealthCalculator.calculate(lastRssi, lastDownloadSpeedMbps);
+
+        ShareHelper.shareResults(
+                this,
+                healthScore.getLabel(),
+                healthScore.getScore(),
+                lastDownloadSpeedMbps,
+                lastUploadSpeedMbps,
+                signalQuality,
+                isSecure
+        );
     }
 
     private void checkSignalAndSuggest() {
@@ -261,20 +425,21 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
     @Override
     public void onUploadComplete(GenericSpeedTestReport report) {
         updateSpeedUI(report, false);
-        checkSignalAndSuggest(); // Check conditions and show suggestion if needed
-        // We don't reset the UI here because the test sequence may continue
+        resetTestUI(getString(R.string.check_again));
+        updateHealthScore();
+        checkSignalAndSuggest();
     }
 
     @Override
     public void onTestFailed(GenericSpeedTestError error, String message) {
-        resetTestUI(getString(R.string.home_analyze_again));
+        resetTestUI(getString(R.string.check_again));
         Toast.makeText(HomeActivity.this, message, Toast.LENGTH_SHORT).show();
         Log.e(TAG, message);
     }
 
     @Override
     public void onTestCancelled() {
-        resetTestUI(getString(R.string.analyze_wifi)); // Reset to the default state
+        resetTestUI(getString(R.string.check_my_wifi));
         Toast.makeText(this, R.string.home_test_cancelled, Toast.LENGTH_SHORT).show();
     }
 
@@ -286,6 +451,7 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
             public void onReceive(Context c, Intent intent) {
                 if (WifiManager.SCAN_RESULTS_AVAILABLE_ACTION.equals(intent.getAction())) {
                     displayScanResults();
+                    updateSecurityBadge();
                 }
             }
         };
@@ -317,10 +483,12 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
         Network activeNetwork = connectivityManager.getActiveNetwork();
         if (activeNetwork == null) {
             networkStatusTextView.setText(R.string.status_not_connected);
-            analyzeButton.setText(R.string.analyze_wifi);
+            analyzeButton.setText(R.string.check_my_wifi);
             analyzeButton.setEnabled(false);
             wifiListView.setVisibility(View.GONE);
+            networksHeaderTextView.setVisibility(View.GONE);
             suggestionCard.setVisibility(View.GONE);
+            securityCard.setVisibility(View.GONE);
             return;
         }
 
@@ -329,24 +497,29 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
             networkStatusTextView.setText(R.string.status_not_connected);
             analyzeButton.setEnabled(false);
             suggestionCard.setVisibility(View.GONE);
+            securityCard.setVisibility(View.GONE);
             return;
         }
 
         analyzeButton.setEnabled(true);
         if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
             networkStatusTextView.setText(R.string.status_connected_wifi);
-            analyzeButton.setText(R.string.analyze_wifi);
+            analyzeButton.setText(R.string.check_my_wifi);
             wifiListView.setVisibility(View.VISIBLE);
+            networksHeaderTextView.setVisibility(View.VISIBLE);
             checkPermissionsAndScan();
         } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
             networkStatusTextView.setText(R.string.status_connected_mobile);
-            analyzeButton.setText(R.string.analyze_mobile_data);
+            analyzeButton.setText(R.string.check_my_wifi);
             wifiListView.setVisibility(View.GONE);
+            networksHeaderTextView.setVisibility(View.GONE);
             suggestionCard.setVisibility(View.GONE);
+            securityCard.setVisibility(View.GONE);
         } else {
             networkStatusTextView.setText(R.string.status_not_connected);
             analyzeButton.setEnabled(false);
             suggestionCard.setVisibility(View.GONE);
+            securityCard.setVisibility(View.GONE);
         }
     }
 
@@ -366,14 +539,15 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
 
     private void displayScanResults() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return; // Permission not granted, can\'t display results
+            return; // Permission not granted, can't display results
         }
         List<ScanResult> scanResults = wifiManager.getScanResults();
         List<WifiNetwork> networkList = new ArrayList<>();
         for (ScanResult scanResult : scanResults) {
             if (scanResult.SSID != null && !scanResult.SSID.isEmpty()) {
                 String strength = SignalStrengthMapper.getSignalStrength(scanResult.level);
-                networkList.add(new WifiNetwork(scanResult.SSID, strength));
+                String security = NetworkSecurityChecker.getSimpleSecurityLabel(scanResult.capabilities);
+                networkList.add(new WifiNetwork(scanResult.SSID, strength + " • " + security));
             }
         }
         ArrayAdapter<WifiNetwork> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, networkList);
