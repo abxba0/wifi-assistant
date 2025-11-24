@@ -84,6 +84,12 @@ public class ToolsActivity extends AppCompatActivity implements SignalStrengthLi
         signalStrengthProvider.stop();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
+    }
+
     private void displayWifiInfo() {
         if (wifiManager == null) {
             String wifiNotAvailable = getString(R.string.wifi_not_available);

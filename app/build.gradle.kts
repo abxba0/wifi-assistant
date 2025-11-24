@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("jacoco")
 }
 
 android {
@@ -24,10 +25,20 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
     }
 }
 
@@ -41,7 +52,58 @@ dependencies {
     // Speed Test Library
     implementation(libs.speed.test)
 
+    // Unit Testing
+    val mockitoVersion = "5.7.0"
     testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:$mockitoVersion")
+    testImplementation("org.mockito:mockito-inline:$mockitoVersion")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.test.ext:junit:1.1.5")
+    
+    // Instrumented Testing
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation("org.mockito:mockito-android:$mockitoVersion")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+}
+
+// JaCoCo configuration for test coverage
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*"
+    )
+    
+    val buildDir = layout.buildDirectory.get().asFile
+    val debugTree = fileTree("${buildDir}/intermediates/javac/debug") {
+        exclude(fileFilter)
+    }
+    
+    val mainSrc = "${project.projectDir}/src/main/java"
+    
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(buildDir) {
+        include("**/*.exec", "**/*.ec")
+    })
+}
+
+tasks.withType<Test> {
+    configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
 }
