@@ -398,7 +398,9 @@ public class HomeActivity extends AppCompatActivity implements SpeedTester.Speed
 
         if (isFirstRun) {
             showFirstRunDialog();
-            // Mark that we've shown the dialog
+            // Mark that we've shown the dialog immediately to prevent showing it again
+            // even if the app is closed before the user clicks "Got it".
+            // This is intentional - we don't want to spam users with the dialog.
             appPrefs.edit().putBoolean(KEY_FIRST_RUN, false).apply();
         }
     }

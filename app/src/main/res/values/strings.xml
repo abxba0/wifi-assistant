@@ -82,8 +82,8 @@
     <string name="suggestion_close_button_description">Close suggestion</string>
 
     <!-- First-run permission dialog strings -->
-    <string name="first_run_dialog_title">Welcome to WiFi Assistant</string>
-    <string name="first_run_dialog_message">This app helps you analyze and optimize your WiFi network performance.\n\n<b>Permissions Explained:</b>\n\n<b>Location Permission:</b>\nGoogle Play policies require location permission for WiFi scanning features. This app <b>does not use, collect, store, or share your physical location</b>. We only need this permission to scan for WiFi networks.\n\n<b>What the app accesses:</b>\n• WiFi network information (signal strength, network names)\n• Internet connection for speed testing\n• Network status\n\n<b>Your Privacy:</b>\nNo personal data or location information is collected, stored, or shared.</string>
+    <string name="first_run_dialog_title">Welcome to Wi-Fi Assistant</string>
+    <string name="first_run_dialog_message">This app helps you analyze and optimize your Wi-Fi network performance.\n\n<b>Permissions Explained:</b>\n\n<b>Location Permission:</b>\nGoogle Play policies require location permission for Wi-Fi scanning features. This app <b>does not use, collect, store, or share your physical location</b>. We only need this permission to scan for Wi-Fi networks.\n\n<b>What the app accesses:</b>\n• Wi-Fi network information (signal strength, network names)\n• Internet connection for speed testing\n• Network status\n\n<b>Your Privacy:</b>\nNo personal data or location information is collected, stored, or shared.</string>
     <string name="first_run_dialog_button">Got it</string>
 
 </resources>
