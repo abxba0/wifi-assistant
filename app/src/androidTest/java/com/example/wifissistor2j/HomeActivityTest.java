@@ -84,16 +84,12 @@ public class HomeActivityTest {
         // Launch activity
         scenario = ActivityScenario.launch(HomeActivity.class);
 
-        // Wait a moment for the activity to complete initialization
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // Verify the first run flag is now false
-        boolean isFirstRun = prefs.getBoolean("first_run", true);
-        assertFalse("First run flag should be false after activity launches", isFirstRun);
+        // Use onActivity callback to ensure activity is ready before checking
+        scenario.onActivity(activity -> {
+            // Verify the first run flag is now false after activity onCreate completes
+            boolean isFirstRun = prefs.getBoolean("first_run", true);
+            assertFalse("First run flag should be false after activity launches", isFirstRun);
+        });
     }
 
     @Test
