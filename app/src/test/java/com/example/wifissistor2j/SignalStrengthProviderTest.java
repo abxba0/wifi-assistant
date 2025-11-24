@@ -78,10 +78,15 @@ public class SignalStrengthProviderTest {
         provider = new SignalStrengthProvider(mockContext, mockListener);
         provider.start();
         
-        // Give time for the handler to execute (this is a simplified test)
+        // Note: Thread.sleep is used here as a simplified approach for this unit test.
+        // In production tests, consider using CountDownLatch or Mockito.verify with timeout
+        // for more reliable async testing. However, due to Handler.post limitations in
+        // unit tests (Looper.getMainLooper() behavior), full verification requires
+        // instrumentation tests. This test validates that the provider starts without
+        // crashing and handles WiFi disabled state.
         Thread.sleep(100);
         
-        // Note: Due to Handler.post limitations in unit tests, we can't easily verify
+        // Due to Handler.post limitations in unit tests, we can't easily verify
         // the listener calls without instrumentation tests
     }
 
